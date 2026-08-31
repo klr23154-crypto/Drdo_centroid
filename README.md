@@ -95,13 +95,11 @@ h) Performance
 
 i) Simulation Output
 
-
-==========================================
 Cycles taken     : 65592
 Object Found     : 1
 Centroid X (col) : 109
 Centroid Y (row) : 162
-==========================================
+
 Expected: Object=1, Cx~110, Cy~163
 (cameraman.tif 256x256, threshold=119)
 
