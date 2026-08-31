@@ -1,0 +1,73 @@
+module restoring_divider25 (
+    input  wire        clk,
+    input  wire        rst_n,
+    input  wire        start,
+    input  wire [24:0] dividend,
+    input  wire [17:0] divisor,
+    output reg  [24:0] quotient,
+    output reg  [17:0] remainder,
+    output reg         valid,
+    output reg         div_by_zero
+);
+
+    reg [17:0] D;     // stored divisor
+    reg [42:0] P;     // {18-bit partial remainder, 25-bit quotient}
+    reg [4:0]  cnt;   // countdown: 25 down to 1
+    reg        busy;
+
+    // Combinational shift-and-subtract for next P value
+    wire [17:0] p_rem  = P[42:25];               // current partial remainder
+    wire [24:0] p_quot = P[24:0];                // current quotient bits
+
+    // Shift left: MSB of p_quot enters LSB of p_rem
+    wire [17:0] shifted_rem  = {p_rem[16:0], p_quot[24]};
+    wire [24:0] shifted_quot = {p_quot[23:0], 1'b0};
+
+    // Trial subtraction
+    wire        can_sub      = (shifted_rem >= D);
+    wire [17:0] next_rem     = can_sub ? (shifted_rem - D) : shifted_rem;
+    wire [24:0] next_quot    = can_sub ? {shifted_quot[24:1], 1'b1} : shifted_quot;
+    wire [42:0] next_P       = {next_rem, next_quot};
+
+    always @(posedge clk) begin
+        if (!rst_n) begin
+            busy        <= 1'b0;
+            valid       <= 1'b0;
+            div_by_zero <= 1'b0;
+            quotient    <= 25'd0;
+            remainder   <= 18'd0;
+            D           <= 18'd0;
+            P           <= 43'd0;
+            cnt         <= 5'd0;
+        end else begin
+            valid <= 1'b0;
+
+            if (!busy) begin
+                if (start) begin
+                    if (divisor == 18'd0) begin
+                        div_by_zero <= 1'b1;
+                        quotient    <= 25'h1FFFFFF;
+                        remainder   <= 18'd0;
+                        valid       <= 1'b1;
+                    end else begin
+                        div_by_zero <= 1'b0;
+                        D    <= divisor;
+                        P    <= {18'd0, dividend}; // rem=0, quot=dividend
+                        cnt  <= 5'd25;
+                        busy <= 1'b1;
+                    end
+                end
+            end else begin
+                P   <= next_P;
+                cnt <= cnt - 5'd1;
+
+                if (cnt == 5'd1) begin
+                    quotient  <= next_P[24:0];
+                    remainder <= next_P[42:25];
+                    valid     <= 1'b1;
+                    busy      <= 1'b0;
+                end
+            end
+        end
+    end
+endmodule
