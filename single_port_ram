@@ -1,0 +1,18 @@
+module single_port_ram (
+    input  wire        clk,
+    input  wire        we,
+    input  wire        re,
+    input  wire [9:0]  row_addr,
+    input  wire [9:0]  col_addr,
+    input  wire [7:0]  data_in,
+    output wire [7:0]  data_out
+);
+    reg [7:0] mem [0:65535];
+    wire [15:0] flat_addr = {row_addr[7:0], col_addr[7:0]};
+
+    always @(posedge clk) begin
+        if (we) mem[flat_addr] <= data_in;
+    end
+
+    assign data_out = mem[flat_addr];
+endmodule
