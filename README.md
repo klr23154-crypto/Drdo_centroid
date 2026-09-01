@@ -7,8 +7,6 @@ a) Result
 
 The red crosshair marks the hardware-detected centroid at **(col=109, row=162)** on the cameraman image — landing accurately on the cameraman's body.
 
-![Centroid Result](centroid_result.png)
-
 | | Value |
 | Hardware output | Cx = 109, Cy = 162 |
 | MATLAB reference | Cx = 110.5, Cy = 163.8 |
